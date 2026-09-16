@@ -36,9 +36,20 @@ class DiagnosisResponse(BaseModel):
         }
 
 app = FastAPI(
-    title="Retina AI API",
-    description="API for detecting retinal conditions using EfficientNet-B0.",
-    version="1.0.0"
+    title="Retina AI Diagnostic API",
+    description="""
+# Retina AI Diagnostic API
+This API provides advanced AI-driven analysis for detecting retinal conditions.
+
+## Features:
+- **Neural Analysis:** Powered by EfficientNet-B0 for highly accurate disease detection.
+- **Explainable AI:** Returns heatmap data to highlight areas of concern in the retina scan.
+- **Robust Clinical Support:** Provides structured observation metrics for diagnostic verification.
+
+## Contact
+Support: support@retina-ai.dev
+""",
+    version="1.1.0"
 )
 
 app.add_middleware(
