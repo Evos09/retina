@@ -1,11 +1,46 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import List
 import ai_model
 import os
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
-app = FastAPI()
+class Observation(BaseModel):
+    label: str
+    value: str
+
+class DiagnosisResponse(BaseModel):
+    filename: str
+    diagnosis: str
+    confidence: float
+    risk_level: str
+    heatmap: str
+    observations: List[Observation]
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "filename": "retina_scan.png",
+                "diagnosis": "Diabetic Retinopathy",
+                "confidence": 0.95,
+                "risk_level": "High",
+                "heatmap": "base64encodedheatmapimage",
+                "observations": [
+                    {"label": "Optic Disc", "value": "Hemorrhages Possible"},
+                    {"label": "Vessels", "value": "Microaneurysms Detected"},
+                    {"label": "Macula", "value": "Exudates Likely"}
+                ]
+            }
+        }
+
+app = FastAPI(
+    title="Retina AI API",
+    description="API for detecting retinal conditions using EfficientNet-B0.",
+    version="1.0.0"
+)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -14,8 +49,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.post("/analyze")
-async def analyze_image(file: UploadFile = File(...)):
+@app.post(
+    "/analyze", 
+    response_model=DiagnosisResponse,
+    summary="Analyze retina image for disease",
+    responses={
+        200: {"description": "Successful analysis"},
+        400: {"description": "Validation failed - invalid image format or data"},
+        500: {"description": "Internal server error during analysis"}
+    }
+)
+async def analyze_image(
+    file: UploadFile = File(..., description="Upload a retina image (PNG or JPEG) for AI-powered disease detection.")
+):
     image_bytes = await file.read()
     
     # 1. AGGRESSIVE VALIDATION
